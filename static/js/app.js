@@ -75,10 +75,17 @@ function focusInput() {
     document.getElementById('messageInput').focus();
 }
 
-// Check AI status
+// Check AI status with timeout
 async function checkStatus() {
     try {
-        const response = await fetch('/health');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout for health check
+        
+        const response = await fetch('/health', {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
         const data = await response.json();
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
@@ -133,11 +140,19 @@ async function sendMessage() {
     
     try {
         isLoading = true;
+        
+        // Create AbortController for timeout handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30-second timeout
+        
         const response = await fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify({ message: message }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         const data = await response.json();
         hideTyping();
@@ -152,7 +167,18 @@ async function sendMessage() {
     } catch (error) {
         console.error('Chat request failed:', error);
         hideTyping();
-        addMessage('assistant', 'Sorry, I encountered a connection error. Please try again.');
+        
+        let errorMessage = 'Sorry, I encountered an error. Please try again.';
+        
+        if (error.name === 'AbortError') {
+            errorMessage = '⏱️ Request timed out. The AI might be busy - please try again.';
+        } else if (error.message.includes('Failed to fetch')) {
+            errorMessage = '🌐 Connection error. Please check your internet and try again.';
+        } else if (error.message.includes('500')) {
+            errorMessage = '⚠️ Server error. Please try again in a moment.';
+        }
+        
+        addMessage('assistant', errorMessage);
     } finally {
         isLoading = false;
         toggleSendButton();

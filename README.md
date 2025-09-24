@@ -23,35 +23,64 @@ Wave AI is the **simplified version** of Pixel AI, designed specifically for **w
 
 ---
 
-## 🚀 **Quick Start (3 Steps!)**
+## 🚀 **Quick Start - Choose Your Deployment Method**
 
-### **Step 1: Get Your AI Key**
-1. Go to [Google AI Studio](https://ai.google.dev)
-2. Create a free account
-3. Generate your Gemini API key
+### **🔑 Prerequisites**
+1. **Google AI Studio**: Go to [Google AI Studio](https://ai.google.dev)
+   - Create a free account
+   - Generate your Gemini API key
+2. **Google Cloud Project**: Set up with **Owner** permissions
+   - Create or use existing GCP project
+   - Enable billing (required for Cloud Run)
+   - **You must have Owner role** on the project for the script to work
+3. **Google Cloud Shell**: Use GCP Cloud Shell (recommended)
+   - Automatically authenticated with your GCP account
+   - Pre-installed with `gcloud` CLI
+   - No local setup required
 
-### **Step 2: Setup**
+---
+
+## **Option 1: 🤖 Automated Deployment (Recommended)**
+
+**One-click deployment with our smart script!**
+
 ```bash
-# Clone or download the project
+# Clone the project
+git clone <your-repo-url>
 cd wave_ai_assistant
 
-# Install the simple requirements
-pip install -r requirements.txt
-
-# Set your AI key (replace with your actual key)
-export GEMINI_API_KEY="your-api-key-here"
+# Run the automated deployment script
+chmod +x deploy.sh
+./deploy.sh
 ```
 
-### **Step 3: Run Wave AI**
-```bash
-# Start Wave AI (FastAPI production server)
-python main.py
+**✨ What the script does:**
+- 🔍 Checks your Google Cloud setup
+- 🏗️ Creates all required infrastructure
+- 🚀 Deploys Wave AI to Cloud Run
+- 🌐 Provides you with a live URL
 
-# Or run directly with uvicorn
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
+**Perfect for:** Beginners, workshops, quick demos
 
-**That's it!** Wave AI will be running at http://localhost:8000
+---
+
+## **Option 2: 📖 Manual Deployment (For Learning)**
+
+**Step-by-step deployment to understand the process!**
+
+Follow the detailed guide: **[📋 MANUAL_DEPLOYMENT.md](MANUAL_DEPLOYMENT.md)**
+
+**What you'll learn:**
+- 🛠️ Google Cloud resource setup
+- 🏗️ Docker containerization
+- ☁️ Cloud Run deployment
+- 🔧 Troubleshooting techniques
+
+**Perfect for:** Students, developers wanting to understand the architecture
+
+---
+
+**🌐 Result:** Your Wave AI will be live on Google Cloud Run with a public URL!
 
 ---
 
