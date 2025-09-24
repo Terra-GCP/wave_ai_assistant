@@ -1,46 +1,93 @@
-# Local .terraform directories
-**/.terraform/*
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# .tfstate files
-*.tfstate
-*.tfstate.*
-.terraform
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+.env/
 
-# Crash log files
-crash.log
-
-# Ignore any .tfvars files that are generated automatically for each Terraform run. Most
-# .tfvars files are managed as part of configuration and so should be included in
-# version control.
-#
-# example.tfvars
-
-# Ignore override files as they are usually used to override resources locally and so
-# are not checked in
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
-
-# Include override files you do wish to add to version control using negated pattern
-#
-# !example_override.tf
-
-# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
-# example: *tfplan*
-
-# exclude lock file
-*.hcl.lock
-*lock.hcl*
-*.lock.hcl
-**/.terraform.lock.hcl
-*.backup
-*.plan
+# Environment Variables & Secrets
+.env
+.env.local
+.env.production
+.env.development
 *.key
-*.json
+api_key.txt
+secret.txt
 
-# Exlude warzone
-
-./warzone/**
-./warzone
+# IDE Files
+.vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+log/
+
+# Docker
+.dockerignore
+
+# Cloud Deployment
+gcp-config/
+.gcloud/
+*.json
+!package.json
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+*.temp
+*.backup
+*.bak
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Local development
+local_test.py
+debug.py
+test_*.sh
+deploy_*.sh
+!deploy.sh
