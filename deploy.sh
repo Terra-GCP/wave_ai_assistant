@@ -231,35 +231,35 @@ show_deployment_status() {
   if check_apis_enabled; then
     echo "   🔌 ${GREEN}APIs:${RESET}              ✅ Enabled"
   else
-    echo "   🔌 ${RED}APIs:${RESET}              ❌ Not all enabled"
+    echo "   🔌 ${RED}APIs:${RESET}              ❌ Not enabled"
   fi
   
   # Artifact Registry
   if check_artifact_registry; then
     echo "   📦 ${GREEN}Artifact Registry:${RESET} ✅ Repository exists"
   else
-    echo "   📦 ${RED}Artifact Registry:${RESET} ❌ Repository missing"
+    echo "   📦 ${RED}Artifact Registry:${RESET} ❌ Not Found"
   fi
   
   # Secret
   if check_secret_exists; then
     echo "   🔑 ${GREEN}Secret Manager:${RESET}    ✅ API key stored"
   else
-    echo "   🔑 ${RED}Secret Manager:${RESET}    ❌ API key missing"
+    echo "   🔑 ${RED}Secret Manager:${RESET}    ❌ Not Found"
   fi
   
   # Service Account
   if check_service_account; then
     echo "   👤 ${GREEN}Service Account:${RESET}   ✅ Configured"
   else
-    echo "   👤 ${RED}Service Account:${RESET}   ❌ Missing"
+    echo "   👤 ${RED}Service Account:${RESET}   ❌ Not Found"
   fi
   
   # Docker Image
   if check_docker_image; then
     echo "   🐳 ${GREEN}Docker Image:${RESET}      ✅ Built and pushed"
   else
-    echo "   🐳 ${RED}Docker Image:${RESET}      ❌ Not found"
+    echo "   🐳 ${RED}Docker Image:${RESET}      ❌ Not Found"
   fi
   
   # Cloud Run Service - Simple check
@@ -271,7 +271,7 @@ show_deployment_status() {
     echo "   🚢 ${GREEN}Cloud Run:${RESET}         ✅ Working"
     echo "      ${CYAN}URL: $url${RESET}"
   elif [[ "$status" == "not_found" ]]; then
-    echo "   🚢 ${RED}Cloud Run:${RESET}         ❌ Not found"
+    echo "   🚢 ${RED}Cloud Run:${RESET}         ❌ Not Found"
     echo "      ${YELLOW}💡 Use option 1 (Create/Update) to deploy${RESET}"
   else
     echo "   🚢 ${RED}Cloud Run:${RESET}         ❌ Failed"
