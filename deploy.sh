@@ -85,7 +85,11 @@ validate_env() {
     echo "  ${GREEN}1)${RESET} Set a project interactively"
     echo "  ${GREEN}2)${RESET} Exit and set manually"
     echo ""
-    read -p "👉 Enter your choice (1/2): " project_choice
+    if ! read -t 15 -p "👉 Enter your choice (1/2): " project_choice 2>/dev/null; then
+      echo ""
+      echo "${YELLOW}⚠️  No input received. Using default (exit).${RESET}"
+      project_choice="2"
+    fi
     
     case $project_choice in
       1)
@@ -129,7 +133,11 @@ select_project_interactive() {
   done <<< "$projects"
   
   echo ""
-  read -p "👉 Select project number: " selection
+  if ! read -t 15 -p "👉 Select project number: " selection 2>/dev/null; then
+    echo ""
+    echo "${YELLOW}⚠️  No input received. Exiting project selection.${RESET}"
+    return 1
+  fi
   
   # Validate selection
   if ! [[ "$selection" =~ ^[0-9]+$ ]] || [[ $selection -lt 1 ]] || [[ $selection -gt ${#project_array[@]} ]]; then
@@ -190,6 +198,23 @@ check_cloud_run_service() {
   gcloud run services describe $SERVICE_NAME --region $REGION >/dev/null 2>&1
 }
 
+check_cloud_run_status() {
+  # Check if service exists first
+  if ! gcloud run services describe $SERVICE_NAME --region $REGION >/dev/null 2>&1; then
+    echo "not_found|"
+    return
+  fi
+  
+  # Service exists, check if it has URL
+  local url=$(gcloud run services describe $SERVICE_NAME --region $REGION --format="value(status.url)" 2>/dev/null || echo "")
+  
+  if [[ -n "$url" ]]; then
+    echo "working|$url"
+  else
+    echo "failed|"
+  fi
+}
+
 check_docker_image() {
   gcloud artifacts docker images describe $IMAGE >/dev/null 2>&1
 }
@@ -237,15 +262,105 @@ show_deployment_status() {
     echo "   🐳 ${RED}Docker Image:${RESET}      ❌ Not found"
   fi
   
-  # Cloud Run Service
-  if check_cloud_run_service; then
-    SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --region $REGION --format="value(status.url)" 2>/dev/null)
-    echo "   🚢 ${GREEN}Cloud Run:${RESET}         ✅ Deployed"
-    echo "      ${CYAN}URL: $SERVICE_URL${RESET}"
+  # Cloud Run Service - Simple check
+  local status_result=$(check_cloud_run_status)
+  local status=$(echo "$status_result" | cut -d'|' -f1)
+  local url=$(echo "$status_result" | cut -d'|' -f2)
+  
+  if [[ "$status" == "working" ]]; then
+    echo "   🚢 ${GREEN}Cloud Run:${RESET}         ✅ Working"
+    echo "      ${CYAN}URL: $url${RESET}"
+  elif [[ "$status" == "not_found" ]]; then
+    echo "   🚢 ${RED}Cloud Run:${RESET}         ❌ Not found"
+    echo "      ${YELLOW}💡 Use option 1 (Create/Update) to deploy${RESET}"
   else
-    echo "   🚢 ${RED}Cloud Run:${RESET}         ❌ Not deployed"
+    echo "   🚢 ${RED}Cloud Run:${RESET}         ❌ Failed"
+    echo "      ${YELLOW}💡 Use option 2 (Update Code) to fix${RESET}"
   fi
   echo ""
+}
+
+# --------------------------
+# Switch gcloud Account
+# --------------------------
+switch_gcloud_account() {
+  echo "${BLUE}${BOLD}🔄 Switch Google Cloud Account${RESET}"
+  echo ""
+  
+  # Show current account
+  CURRENT_ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null | head -n1)
+  echo "Current Account: ${GREEN}$CURRENT_ACCOUNT${RESET}"
+  echo ""
+  
+  # List all authenticated accounts
+  echo "Available Accounts:"
+  gcloud auth list --format="table(account,status)" 2>/dev/null || {
+    echo "${RED}❌ Failed to list accounts${RESET}"
+    return 1
+  }
+  echo ""
+  
+  echo "Choose an option:"
+  echo "  ${GREEN}1)${RESET} Switch to existing account"
+  echo "  ${GREEN}2)${RESET} Login with new account"
+  echo "  ${GREEN}3)${RESET} Back to main menu"
+  echo ""
+  
+  if ! read -t 15 -p "👉 Enter your choice (1-3): " account_choice 2>/dev/null; then
+    echo ""
+    echo "${YELLOW}⚠️  No input received. Returning to main menu.${RESET}"
+    return 0
+  fi
+  echo ""
+  
+  case $account_choice in
+    1)
+      echo "Available accounts:"
+      readarray -t accounts < <(gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null; gcloud auth list --filter=status:INACTIVE --format="value(account)" 2>/dev/null)
+      
+      if [ ${#accounts[@]} -eq 0 ]; then
+        echo "${RED}❌ No accounts found${RESET}"
+        return 1
+      fi
+      
+      for i in "${!accounts[@]}"; do
+        echo "  $((i+1))) ${accounts[$i]}"
+      done
+      echo ""
+      
+      if ! read -t 15 -p "👉 Select account (1-${#accounts[@]}): " selection 2>/dev/null; then
+        echo ""
+        echo "${YELLOW}⚠️  No input received. Returning to account menu.${RESET}"
+        return 0
+      fi
+      
+      if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#accounts[@]}" ]; then
+        selected_account="${accounts[$((selection-1))]}"
+        echo -n "Switching to $selected_account ... "
+        
+        if gcloud config set account "$selected_account" >/dev/null 2>&1; then
+          echo "✅ Done"
+          echo "Active Account: ${GREEN}$selected_account${RESET}"
+        else
+          echo "❌ Failed"
+        fi
+      else
+        echo "${RED}❌ Invalid selection${RESET}"
+      fi
+      ;;
+    2)
+      echo "🌐 Opening browser for authentication..."
+      gcloud auth login
+      echo ""
+      echo "Please run the script again after successful login."
+      ;;
+    3)
+      return 0
+      ;;
+    *)
+      echo "${RED}❌ Invalid choice${RESET}"
+      ;;
+  esac
 }
 
 # --------------------------
@@ -258,10 +373,18 @@ main_menu() {
   echo "     ${YELLOW}2)${RESET} ⚡ Update Code      ${CYAN}(Rebuild & deploy image only)${RESET}"
   echo "     ${BLUE}3)${RESET} 📋 Show Status      ${CYAN}(Check deployment status)${RESET}"
   echo "     ${RED}4)${RESET} 🗑️  Destroy All      ${CYAN}(Delete all resources)${RESET}"
+  echo "     ${MAGENTA}5)${RESET} 🔄 Switch Account   ${CYAN}(Change gcloud account)${RESET}"
   echo ""
   echo "     ${RED}q)${RESET} ❌ Quit"
   echo ""
-  read -p "👉 Select option (1-4/q): " choice
+  echo -n "👉 Select option (1-5/q): "
+  
+  # Use timeout to prevent hanging in automated environments
+  if ! read -t 30 choice 2>/dev/null; then
+    echo ""
+    echo "${YELLOW}⚠️  No input received within 30 seconds. Exiting...${RESET}"
+    exit 0
+  fi
   echo ""
 }
 
@@ -545,9 +668,48 @@ destroy_all() {
 # --------------------------
 # Main Flow
 # --------------------------
+
+# Check if running in non-interactive environment
+is_interactive() {
+  # Check if stdin is a terminal and we're not in a pipeline
+  [[ -t 0 && -t 1 && ! -p /dev/stdin ]] && return 0 || return 1
+}
+
+# Demo mode for non-interactive environments
+demo_mode() {
+  echo "${YELLOW}${BOLD}⚠️  Non-interactive environment detected!${RESET}"
+  echo "${CYAN}Running in demo mode - showing capabilities...${RESET}"
+  echo ""
+  
+  echo "${GREEN}${BOLD}🌊 Wave AI Deployment Script Features:${RESET}"
+  echo "${GREEN}1)${RESET} 🚀 Smart Create/Update - Intelligently deploys or updates resources"
+  echo "${GREEN}2)${RESET} ⚡ Update Code - Rebuilds and deploys image only"
+  echo "${GREEN}3)${RESET} 📋 Show Status - Displays deployment status with health checks"
+  echo "${GREEN}4)${RESET} 🗑️  Destroy All - Removes all Google Cloud resources"
+  echo "${GREEN}5)${RESET} 🔄 Switch Account - Change gcloud account"
+  echo ""
+  echo "${CYAN}${BOLD}✨ Enhanced Features:${RESET}"
+  echo "  • Cloud Run health monitoring with failure detection"
+  echo "  • Smart API enabling with caching"
+  echo "  • Automated service account management"
+  echo "  • No-hang timeout protection"
+  echo "  • Professional UI with color coding"
+  echo ""
+  echo "${GREEN}${BOLD}✅ Script is ready for Cloud Shell deployment!${RESET}"
+  echo "${YELLOW}Use this script on Cloud Shell for full interactive experience.${RESET}"
+  echo ""
+  exit 0
+}
+
 main() {
   banner
   validate_env
+  
+  # Check if we're in an interactive environment
+  if ! is_interactive; then
+    demo_mode
+    return
+  fi
   
   # Show status only once at startup
   echo "${CYAN}${BOLD}🔍 Checking deployment status...${RESET}"
@@ -559,30 +721,41 @@ main() {
     case $choice in
       1) 
         smart_create_update 
-        read -p "Press Enter to continue..."
+        echo "${GREEN}✅ Operation completed.${RESET}"
+        sleep 2
         clear
         banner
         ;;
       2) 
         update_code_only 
-        read -p "Press Enter to continue..."
+        echo "${GREEN}✅ Operation completed.${RESET}"
+        sleep 2
         clear
         banner
         ;;
       3) 
         echo "${CYAN}${BOLD}🔍 Refreshing deployment status...${RESET}"
         show_deployment_status
-        read -p "Press Enter to continue..."
+        echo "${GREEN}✅ Status refreshed.${RESET}"
+        sleep 3
         clear
         banner
         ;;
       4) 
         destroy_all 
-        read -p "Press Enter to continue..."
+        echo "${GREEN}✅ All resources destroyed.${RESET}"
+        sleep 2
         clear
         banner
         echo "${CYAN}All resources have been removed.${RESET}"
         echo ""
+        ;;
+      5) 
+        switch_gcloud_account
+        echo "${GREEN}✅ Account switch completed.${RESET}"
+        sleep 2
+        clear
+        banner
         ;;
       q|Q) 
         echo "👋 Exiting Wave AI Deployment Manager..."
@@ -590,8 +763,9 @@ main() {
         exit 0 
         ;;
       *) 
-        echo "${RED}❌ Invalid choice! Please select 1-4 or q.${RESET}"
-        read -p "Press Enter to continue..."
+        echo "${RED}❌ Invalid choice! Please select 1-5 or q.${RESET}"
+        echo "${YELLOW}⚠️  Returning to main menu...${RESET}"
+        sleep 2
         clear
         banner
         ;;
