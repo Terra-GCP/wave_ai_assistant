@@ -666,6 +666,20 @@ destroy_all() {
 }
 
 # --------------------------
+# Summary & Exit
+# --------------------------
+show_completion_summary() {
+  local action_name="$1"
+  echo ""
+  echo "${GREEN}${BOLD}✅ $action_name completed successfully!${RESET}"
+  echo ""
+  echo "${BLUE}${BOLD}🌊 Wave AI Deployment Manager - Session Complete${RESET}"
+  echo "${CYAN}Thank you for using Wave AI! 🚀${RESET}"
+  echo ""
+  exit 0
+}
+
+# --------------------------
 # Main Flow
 # --------------------------
 
@@ -715,64 +729,46 @@ main() {
   echo "${CYAN}${BOLD}🔍 Checking deployment status...${RESET}"
   show_deployment_status
   
-  while true; do
-    main_menu
-    
-    case $choice in
-      1) 
-        smart_create_update 
-        echo "${GREEN}✅ Operation completed.${RESET}"
-        sleep 2
-        clear
-        banner
-        ;;
-      2) 
-        update_code_only 
-        echo "${GREEN}✅ Operation completed.${RESET}"
-        sleep 2
-        clear
-        banner
-        ;;
-      3) 
-        echo "${CYAN}${BOLD}🔍 Refreshing deployment status...${RESET}"
-        show_deployment_status
-        echo "${GREEN}✅ Status refreshed.${RESET}"
-        sleep 3
-        clear
-        banner
-        ;;
-      4) 
-        destroy_all 
-        echo "${GREEN}✅ All resources destroyed.${RESET}"
-        sleep 2
-        clear
-        banner
-        echo "${CYAN}All resources have been removed.${RESET}"
-        echo ""
-        ;;
-      5) 
-        switch_gcloud_account
-        echo "${GREEN}✅ Account switch completed.${RESET}"
-        sleep 2
-        clear
-        banner
-        ;;
-      q|Q) 
-        echo "👋 Exiting Wave AI Deployment Manager..."
-        echo ""
-        exit 0 
-        ;;
-      *) 
-        echo "${RED}❌ Invalid choice! Please select 1-5 or q.${RESET}"
-        echo "${YELLOW}⚠️  Returning to main menu...${RESET}"
-        sleep 2
-        clear
-        banner
-        ;;
-    esac
-    
-    echo ""
-  done
+  main_menu
+  
+  case $choice in
+    1) 
+      echo ""
+      smart_create_update 
+      show_completion_summary "Smart Deploy/Update"
+      ;;
+    2) 
+      echo ""
+      update_code_only 
+      show_completion_summary "Code Update"
+      ;;
+    3) 
+      echo ""
+      echo "${CYAN}${BOLD}🔍 Refreshing deployment status...${RESET}"
+      show_deployment_status
+      show_completion_summary "Status Check"
+      ;;
+    4) 
+      echo ""
+      destroy_all 
+      show_completion_summary "Resource Cleanup"
+      ;;
+    5) 
+      echo ""
+      switch_gcloud_account
+      show_completion_summary "Account Switch"
+      ;;
+    q|Q) 
+      echo "👋 Exiting Wave AI Deployment Manager..."
+      echo ""
+      exit 0 
+      ;;
+    *) 
+      echo "${RED}❌ Invalid choice! Please select 1-5 or q.${RESET}"
+      echo ""
+      exit 1
+      ;;
+  esac
 }
 
 # Run the main function
