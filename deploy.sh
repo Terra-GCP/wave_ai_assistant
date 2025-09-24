@@ -292,75 +292,52 @@ switch_gcloud_account() {
   echo "Current Account: ${GREEN}$CURRENT_ACCOUNT${RESET}"
   echo ""
   
-  # List all authenticated accounts
-  echo "Available Accounts:"
-  gcloud auth list --format="table(account,status)" 2>/dev/null || {
-    echo "${RED}❌ Failed to list accounts${RESET}"
-    return 1
-  }
+  # Show available accounts for reference
+  echo "${CYAN}Available Authenticated Accounts:${RESET}"
+  gcloud auth list --format="value(account)" 2>/dev/null | while read account; do
+    if [[ -n "$account" ]]; then
+      echo "  • $account"
+    fi
+  done
   echo ""
   
-  echo "Choose an option:"
-  echo "  ${GREEN}1)${RESET} Switch to existing account"
-  echo "  ${GREEN}2)${RESET} Login with new account"
-  echo "  ${GREEN}3)${RESET} Back to main menu"
-  echo ""
+  # Ask for account email
+  echo "${YELLOW}Enter the email address of the account you want to switch to:${RESET}"
+  echo -n "👉 Account email: "
   
-  if ! read -t 15 -p "👉 Enter your choice (1-3): " account_choice 2>/dev/null; then
+  if ! read -t 30 account_email 2>/dev/null; then
     echo ""
-    echo "${YELLOW}⚠️  No input received. Returning to main menu.${RESET}"
+    echo "${YELLOW}⚠️  No input received. Account switch cancelled.${RESET}"
     return 0
   fi
   echo ""
   
-  case $account_choice in
-    1)
-      echo "Available accounts:"
-      readarray -t accounts < <(gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null; gcloud auth list --filter=status:INACTIVE --format="value(account)" 2>/dev/null)
-      
-      if [ ${#accounts[@]} -eq 0 ]; then
-        echo "${RED}❌ No accounts found${RESET}"
-        return 1
-      fi
-      
-      for i in "${!accounts[@]}"; do
-        echo "  $((i+1))) ${accounts[$i]}"
-      done
-      echo ""
-      
-      if ! read -t 15 -p "👉 Select account (1-${#accounts[@]}): " selection 2>/dev/null; then
-        echo ""
-        echo "${YELLOW}⚠️  No input received. Returning to account menu.${RESET}"
-        return 0
-      fi
-      
-      if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#accounts[@]}" ]; then
-        selected_account="${accounts[$((selection-1))]}"
-        echo -n "Switching to $selected_account ... "
-        
-        if gcloud config set account "$selected_account" >/dev/null 2>&1; then
-          echo "✅ Done"
-          echo "Active Account: ${GREEN}$selected_account${RESET}"
-        else
-          echo "❌ Failed"
-        fi
-      else
-        echo "${RED}❌ Invalid selection${RESET}"
-      fi
-      ;;
-    2)
-      echo "🌐 Opening browser for authentication..."
-      gcloud auth login
-      echo ""
-      echo "Please run the script again after successful login."
-      ;;
-    3)
-      return 0
-      ;;
-    *)
-      echo "${RED}❌ Invalid choice${RESET}"
-      ;;
-  esac
+  # Validate email format
+  if [[ ! "$account_email" =~ ^[^@]+@[^@]+\.[^@]+$ ]]; then
+    echo "${RED}❌ Invalid email format: $account_email${RESET}"
+    return 1
+  fi
+  
+  # Check if account is authenticated
+  if ! gcloud auth list --format="value(account)" 2>/dev/null | grep -q "^$account_email$"; then
+    echo "${YELLOW}⚠️  Account '$account_email' is not authenticated.${RESET}"
+    echo "${CYAN}Initiating login for this account...${RESET}"
+    echo ""
+    gcloud auth login "$account_email"
+    echo ""
+  fi
+  
+  # Switch to the account
+  echo -n "Switching to $account_email ... "
+  if gcloud config set account "$account_email" >/dev/null 2>&1; then
+    echo "✅ Done"
+    echo ""
+    echo "${GREEN}${BOLD}✅ Successfully switched to: $account_email${RESET}"
+  else
+    echo "❌ Failed"
+    echo "${RED}❌ Failed to switch to: $account_email${RESET}"
+    return 1
+  fi
 }
 
 # --------------------------
