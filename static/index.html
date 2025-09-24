@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave AI - Simple AI Assistant</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon animated-wave">
+                        <div class="wave-container">
+                            <svg width="32" height="32" viewBox="0 0 32 32" class="wave-svg">
+                                <path class="wave-path wave1" d="M0,16 Q8,8 16,16 Q24,24 32,16 V32 H0 Z" fill="url(#waveGradient1)"/>
+                                <path class="wave-path wave2" d="M0,16 Q8,24 16,16 Q24,8 32,16 V32 H0 Z" fill="url(#waveGradient2)"/>
+                                <defs>
+                                    <linearGradient id="waveGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#007acc;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#0066cc;stop-opacity:1" />
+                                    </linearGradient>
+                                    <linearGradient id="waveGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#007acc;stop-opacity:0.6" />
+                                        <stop offset="100%" style="stop-color:#0066cc;stop-opacity:0.6" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="logo-text">
+                        <span class="wave-text">Wave AI</span>
+                        <div class="ripple-effect"></div>
+                    </div>
+                </div>
+                <button class="new-chat-btn" onclick="createNewChat()">
+                    <div class="btn-icon">✨</div>
+                    <span>New Chat</span>
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Chat History -->
+                <div class="chat-history">
+                    <div class="section-header">
+                        <span>💬 Recent Chats</span>
+                        <button class="clear-all-btn" onclick="clearAllChats()" title="Clear All History">
+                            <div class="rotating-icon">🗑️</div>
+                        </button>
+                    </div>
+                    <div class="chat-list" id="chatList">
+                        <div class="empty-state">
+                            <div class="empty-icon floating">💭</div>
+                            <p>No conversations yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="status-section">
+                    <div class="status" id="status">
+                        <div class="status-dot pulsing" id="statusDot"></div>
+                        <span id="statusText">Connecting...</span>
+                    </div>
+                </div>
+                
+                <div class="footer-actions">
+                    <button class="footer-action-btn" onclick="showAbout()" title="About Developer">
+                        <div class="bouncing-icon">👨‍💻</div>
+                        <span>About Developer</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggle">
+                    <div class="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+                <div class="header-title">
+                    <div class="title-icon animated-wave">🌊</div>
+                    <h1>Wave AI</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="clearCurrentChat()" title="Clear Current Chat">
+                        <div class="spinning-icon">🧹</div>
+                    </button>
+                </div>
+            </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-container">
+            <div class="messages" id="messages">
+                <div class="welcome-message">
+                    <div class="welcome-icon">🌊</div>
+                    <h2>Welcome to Wave AI</h2>
+                    <p>Your professional AI assistant powered by enterprise-grade technology, ready to help with anything you need.</p>
+                    <div class="sample-questions">
+                        <button class="sample-btn" onclick="sendSample('Tell me a fun fact')">Tell me a fun fact</button>
+                        <button class="sample-btn" onclick="sendSample('Help me write an email')">Help me write an email</button>
+                        <button class="sample-btn" onclick="sendSample('Explain quantum computing')">Explain quantum computing</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <span>Wave AI is thinking...</span>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-container">
+            <div class="input-wrapper">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="Message Wave AI..." 
+                    rows="1"
+                    onkeydown="handleKeyDown(event)"
+                    oninput="autoResize(this)"
+                ></textarea>
+                <button id="sendBtn" onclick="sendMessage()" disabled>
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="input-footer">
+                <button class="footer-btn" onclick="clearChat()">Clear Chat</button>
+                <span class="powered-by">Powered by Google Gemini</span>
+                <button class="footer-btn" onclick="showAbout()">About</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div class="modal" id="aboutModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-icon animated-wave">🌊</div>
+                    <h3>About Wave AI</h3>
+                </div>
+                <button class="modal-close" onclick="hideAbout()">
+                    <div class="close-icon rotating-icon">✕</div>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="about-section">
+                    <div class="about-header">
+                        <div class="version-badge">
+                            <div class="badge-icon pulsing">⚡</div>
+                            <span>Version 1.0</span>
+                        </div>
+                        <p class="tagline">Professional AI assistant built with enterprise-grade architecture and modern technologies.</p>
+                    </div>
+                    
+                    <div class="developer-info">
+                        <div class="developer-card">
+                            <div class="developer-avatar">
+                                <div class="avatar-icon bouncing-icon">👨‍💻</div>
+                            </div>
+                            <div class="developer-details">
+                                <h4>Ayush Shukla</h4>
+                                <p class="developer-title">Cloud & DevOps SME</p>
+                                <p class="developer-bio">Building scalable cloud infrastructure and intelligent automation solutions for enterprise applications.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tech-stack">
+                        <h4>🛠️ Technology Stack</h4>
+                        <div class="tech-badges">
+                            <span class="tech-badge">
+                                <div class="tech-icon floating">⚡</div>
+                                FastAPI
+                            </span>
+                            <span class="tech-badge">
+                                <div class="tech-icon floating">🧠</div>
+                                Google Gemini AI
+                            </span>
+                            <span class="tech-badge">
+                                <div class="tech-icon floating">🎨</div>
+                                Vanilla JavaScript
+                            </span>
+                            <span class="tech-badge">
+                                <div class="tech-icon floating">☁️</div>
+                                Google Cloud Run
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="project-info">
+                        <h4>📋 Project Details</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <strong>Purpose:</strong> Professional AI assistant with enterprise-ready architecture
+                            </div>
+                            <div class="info-item">
+                                <strong>Architecture:</strong> FastAPI backend with modern JavaScript frontend
+                            </div>
+                            <div class="info-item">
+                                <strong>Focus:</strong> Production-grade AI chat experience with modern UI/UX
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-section">
+                        <h4>💌 Get in Touch</h4>
+                        <p>If you have questions about Wave AI or want to discuss cloud infrastructure and AI development solutions, feel free to reach out!</p>
+                        <div class="contact-note">
+                            <div class="note-icon pulsing">💡</div>
+                            <p><em>This assistant can tell you more about the developer if you ask!</em></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
