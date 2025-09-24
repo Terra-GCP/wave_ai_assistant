@@ -262,6 +262,7 @@ main_menu() {
   echo "     ${RED}q)${RESET} ❌ Quit"
   echo ""
   read -p "👉 Select option (1-4/q): " choice
+  echo ""
 }
 
 # --------------------------

@@ -47,13 +47,13 @@ def initialize_ai():
         return None
     
     try:
-    genai.configure(api_key=api_key)
+        genai.configure(api_key=api_key)
         model = genai.GenerativeModel("gemini-1.5-pro")
         print("✅ Wave AI initialized successfully")
-                return model
-        except Exception as e:
+        return model
+    except Exception as e:
         print(f"❌ Failed to initialize AI: {e}")
-    return None
+        return None
 
 # Initialize AI
 wave_ai = initialize_ai()
