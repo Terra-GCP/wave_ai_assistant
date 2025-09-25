@@ -108,6 +108,29 @@ deploy_wave_ai() {
     # Setup secret
     setup_secret
     
+    # Grant Cloud Build permissions to compute service account
+    echo -e "${CYAN}Setting up Cloud Build permissions...${RESET}"
+    local project_number=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
+    local compute_sa="${project_number}-compute@developer.gserviceaccount.com"
+    
+    # Grant Cloud Build Editor role
+    if gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+        --member="serviceAccount:$compute_sa" \
+        --role="roles/cloudbuild.builds.editor" --quiet; then
+        echo -e "${GREEN}✅ Cloud Build permissions granted${RESET}"
+    else
+        echo -e "${YELLOW}⚠️  Cloud Build permissions already set${RESET}"
+    fi
+    
+    # Grant Storage Admin role for Cloud Build staging
+    if gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+        --member="serviceAccount:$compute_sa" \
+        --role="roles/storage.admin" --quiet; then
+        echo -e "${GREEN}✅ Storage permissions granted${RESET}"
+    else
+        echo -e "${YELLOW}⚠️  Storage permissions already set${RESET}"
+    fi
+    
     # Create artifact registry
     if ! gcloud artifacts repositories describe "$RESOURCE_NAME" --location="$REGION" >/dev/null 2>&1; then
         echo -e "${CYAN}Creating artifact registry...${RESET}"

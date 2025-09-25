@@ -53,14 +53,27 @@ gcloud secrets add-iam-policy-binding $RESOURCE_NAME \
     --role="roles/secretmanager.secretAccessor"
 ```
 
-## Step 3: Create Artifact Registry
+## Step 3: Setup Cloud Build Permissions
+```bash
+# Grant Cloud Build Editor role to compute service account
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$COMPUTE_SA" \
+    --role="roles/cloudbuild.builds.editor"
+
+# Grant Storage Admin role for Cloud Build staging
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$COMPUTE_SA" \
+    --role="roles/storage.admin"
+```
+
+## Step 4: Create Artifact Registry
 ```bash
 gcloud artifacts repositories create $RESOURCE_NAME \
   --repository-format=docker \
   --location=$REGION
 ```
 
-## Step 4: Build & Push Docker Image
+## Step 5: Build & Push Docker Image
 ```bash
 # Configure Docker auth
 gcloud auth configure-docker ${REGION}-docker.pkg.dev
@@ -72,7 +85,7 @@ docker build -t $IMAGE .
 docker push $IMAGE
 ```
 
-## Step 5: Deploy to Cloud Run
+## Step 6: Deploy to Cloud Run
 ```bash
 gcloud run deploy $RESOURCE_NAME \
   --image=$IMAGE \
@@ -87,7 +100,7 @@ gcloud run deploy $RESOURCE_NAME \
   --execution-environment=gen2
 ```
 
-## Step 6: Get URL
+## Step 7: Get URL
 ```bash
 gcloud run services describe $RESOURCE_NAME \
   --region=$REGION \
