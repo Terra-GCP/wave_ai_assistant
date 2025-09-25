@@ -116,7 +116,9 @@ deploy_wave_ai() {
     # Single Editor role covers everything we need
     if gcloud projects add-iam-policy-binding "$PROJECT_ID" \
         --member="serviceAccount:$compute_sa" \
-        --role="roles/editor" --quiet; then
+        --role="roles/editor" \
+        --condition=None \
+        --quiet; then
         echo -e "${GREEN}✅ All deployment permissions granted${RESET}"
     else
         echo -e "${YELLOW}⚠️  Permissions already set${RESET}"

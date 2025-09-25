@@ -58,7 +58,8 @@ gcloud secrets add-iam-policy-binding $RESOURCE_NAME \
 # Grant Editor role to compute service account (covers ALL deployment needs: Cloud Build, Storage, Secrets, Cloud Run, etc.)
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$COMPUTE_SA" \
-    --role="roles/editor"
+    --role="roles/editor" \
+    --condition=None
 ```
 
 ## Step 4: Create Artifact Registry
