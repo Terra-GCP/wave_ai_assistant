@@ -49,7 +49,15 @@ setup_secret() {
     
     if gcloud secrets describe "$RESOURCE_NAME" >/dev/null 2>&1; then
         echo -e "${GREEN}✅ Secret already exists${RESET}"
-        echo -e "${GREEN}✅ Secret permissions covered by editor role${RESET}"
+        
+        # Grant secret-level access (required for Cloud Run --set-secrets, even with editor role)
+        local project_number=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
+        local compute_sa="${project_number}-compute@developer.gserviceaccount.com"
+        
+        gcloud secrets add-iam-policy-binding "$RESOURCE_NAME" \
+            --member="serviceAccount:$compute_sa" \
+            --role="roles/secretmanager.secretAccessor" 2>/dev/null || true
+        echo -e "${GREEN}✅ Secret permissions configured${RESET}"
         return
     fi
     
@@ -65,7 +73,16 @@ setup_secret() {
     echo -e "${YELLOW}🔐 Creating secret...${RESET}"
     if echo -n "$api_key" | gcloud secrets create "$RESOURCE_NAME" --data-file=-; then
         echo -e "${GREEN}✅ API key stored securely${RESET}"
-        echo -e "${GREEN}✅ Secret permissions covered by editor role${RESET}"
+        
+        # Grant secret-level access (required for Cloud Run --set-secrets, even with editor role)
+        local project_number=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
+        local compute_sa="${project_number}-compute@developer.gserviceaccount.com"
+        
+        if gcloud secrets add-iam-policy-binding "$RESOURCE_NAME" \
+            --member="serviceAccount:$compute_sa" \
+            --role="roles/secretmanager.secretAccessor"; then
+            echo -e "${GREEN}✅ Secret permissions configured${RESET}"
+        fi
     else
         echo -e "${RED}❌ Failed to store API key${RESET}"
         exit 1

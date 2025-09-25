@@ -44,9 +44,13 @@ gcloud services enable secretmanager.googleapis.com
 ```bash
 echo -n "YOUR_GEMINI_API_KEY" | gcloud secrets create $RESOURCE_NAME --data-file=-
 
-# Prepare service account variable for Step 3
+# Grant secret-level access (required for Cloud Run --set-secrets, even with editor role)
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
 COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+gcloud secrets add-iam-policy-binding $RESOURCE_NAME \
+    --member="serviceAccount:$COMPUTE_SA" \
+    --role="roles/secretmanager.secretAccessor"
 ```
 
 ## Step 3: Setup Service Account Permissions
