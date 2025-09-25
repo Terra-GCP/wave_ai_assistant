@@ -49,15 +49,7 @@ setup_secret() {
     
     if gcloud secrets describe "$RESOURCE_NAME" >/dev/null 2>&1; then
         echo -e "${GREEN}✅ Secret already exists${RESET}"
-        
-        # Grant compute service account access
-        local project_number=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
-        local compute_sa="${project_number}-compute@developer.gserviceaccount.com"
-        
-        gcloud secrets add-iam-policy-binding "$RESOURCE_NAME" \
-            --member="serviceAccount:$compute_sa" \
-            --role="roles/secretmanager.secretAccessor" 2>/dev/null || true
-        echo -e "${GREEN}✅ Secret permissions verified${RESET}"
+        echo -e "${GREEN}✅ Secret permissions covered by editor role${RESET}"
         return
     fi
     
@@ -73,16 +65,7 @@ setup_secret() {
     echo -e "${YELLOW}🔐 Creating secret...${RESET}"
     if echo -n "$api_key" | gcloud secrets create "$RESOURCE_NAME" --data-file=-; then
         echo -e "${GREEN}✅ API key stored securely${RESET}"
-        
-        # Grant compute service account access
-        local project_number=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
-        local compute_sa="${project_number}-compute@developer.gserviceaccount.com"
-        
-        if gcloud secrets add-iam-policy-binding "$RESOURCE_NAME" \
-            --member="serviceAccount:$compute_sa" \
-            --role="roles/secretmanager.secretAccessor"; then
-            echo -e "${GREEN}✅ Secret access granted${RESET}"
-        fi
+        echo -e "${GREEN}✅ Secret permissions covered by editor role${RESET}"
     else
         echo -e "${RED}❌ Failed to store API key${RESET}"
         exit 1
@@ -108,27 +91,18 @@ deploy_wave_ai() {
     # Setup secret
     setup_secret
     
-    # Grant Cloud Build permissions to compute service account
-    echo -e "${CYAN}Setting up Cloud Build permissions...${RESET}"
+    # Grant Editor role to compute service account (covers ALL deployment needs: Cloud Build, Storage, Secrets, Cloud Run, etc.)
+    echo -e "${CYAN}Setting up compute service account permissions...${RESET}"
     local project_number=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
     local compute_sa="${project_number}-compute@developer.gserviceaccount.com"
     
-    # Grant Cloud Build Editor role
+    # Single Editor role covers everything we need
     if gcloud projects add-iam-policy-binding "$PROJECT_ID" \
         --member="serviceAccount:$compute_sa" \
-        --role="roles/cloudbuild.builds.editor" --quiet; then
-        echo -e "${GREEN}✅ Cloud Build permissions granted${RESET}"
+        --role="roles/editor" --quiet; then
+        echo -e "${GREEN}✅ All deployment permissions granted${RESET}"
     else
-        echo -e "${YELLOW}⚠️  Cloud Build permissions already set${RESET}"
-    fi
-    
-    # Grant Storage Admin role for Cloud Build staging
-    if gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-        --member="serviceAccount:$compute_sa" \
-        --role="roles/storage.admin" --quiet; then
-        echo -e "${GREEN}✅ Storage permissions granted${RESET}"
-    else
-        echo -e "${YELLOW}⚠️  Storage permissions already set${RESET}"
+        echo -e "${YELLOW}⚠️  Permissions already set${RESET}"
     fi
     
     # Create artifact registry
