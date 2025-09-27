@@ -76,12 +76,13 @@ def initialize_ai():
             for model in available_models[:5]:  # Show first 5 models
                 print("   - {}".format(model.name))
             
-            # Preferred models in order of preference
+            # Preferred models in order of preference (stable models first, avoid preview)
             preferred_models = [
                 "models/gemini-1.5-flash",
                 "models/gemini-1.5-pro", 
                 "models/gemini-pro",
                 "models/gemini-1.0-pro",
+                "models/gemini-2.5-flash",  # New stable model
             ]
             
             # Find the first available preferred model
@@ -95,11 +96,24 @@ def initialize_ai():
                 if selected_model_name:
                     break
             
-            # If no preferred model found, use the first available model that supports generateContent
+            # If no preferred model found, use stable models (avoid preview models)
             if not selected_model_name:
+                print("🔍 No preferred models found, searching for stable models...")
+                for available_model in available_models:
+                    if ('generateContent' in available_model.supported_generation_methods and 
+                        'preview' not in available_model.name.lower() and
+                        'experimental' not in available_model.name.lower()):
+                        selected_model_name = available_model.name
+                        print("✅ Found stable model: {}".format(selected_model_name))
+                        break
+            
+            # Last resort: use any available model (including preview)
+            if not selected_model_name:
+                print("⚠️ No stable models found, using first available model...")
                 for available_model in available_models:
                     if 'generateContent' in available_model.supported_generation_methods:
                         selected_model_name = available_model.name
+                        print("⚠️ Using preview/experimental model: {}".format(selected_model_name))
                         break
             
             if not selected_model_name:
@@ -126,18 +140,37 @@ def initialize_ai():
                 print("❌ All fallback models failed")
                 return None
         
-        # Test the selected model
+        # Test the selected model with a safe prompt
         try:
             print("🧪 Testing AI connection...")
-            test_response = model.generate_content("Test", generation_config={"max_output_tokens": 10})
-            if test_response and test_response.text:
+            # Use a very safe, neutral test prompt to avoid content filtering
+            safe_test_prompt = "Hello, can you say hi?"
+            test_response = model.generate_content(safe_test_prompt, generation_config={"max_output_tokens": 20})
+            
+            if test_response and hasattr(test_response, 'text') and test_response.text:
                 print("✅ Wave AI initialized and tested successfully")
                 return model
+            elif test_response and hasattr(test_response, 'candidates') and test_response.candidates:
+                # Check if response was blocked
+                candidate = test_response.candidates[0]
+                if hasattr(candidate, 'finish_reason'):
+                    if candidate.finish_reason == 2:  # RECITATION
+                        print("⚠️ Test blocked by content filter (RECITATION), but model should work for normal requests")
+                    elif candidate.finish_reason == 3:  # SAFETY
+                        print("⚠️ Test blocked by safety filter, but model should work for normal requests")
+                    else:
+                        print("⚠️ Test had finish_reason: {}".format(candidate.finish_reason))
+                return model  # Return model anyway, it might work for actual requests
             else:
-                print("⚠️ AI initialized but test failed")
-                return model  # Still return model, might work for actual requests
+                print("⚠️ AI test response was empty, but model should work for actual requests")
+                return model
+                
         except Exception as test_e:
-            print("⚠️ AI initialized but connection test failed: {}".format(str(test_e)))
+            error_msg = str(test_e)
+            if "finish_reason" in error_msg.lower() or "recitation" in error_msg.lower():
+                print("⚠️ Test blocked by content filter, but model should work for normal requests")
+            else:
+                print("⚠️ AI connection test failed: {}".format(error_msg))
             return model  # Still return model, might work for actual requests
             
     except Exception as e:
