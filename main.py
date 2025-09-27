@@ -39,7 +39,7 @@ app.add_middleware(
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Initialize Gemini AI with robust validation
+# Initialize Gemini AI with dynamic model discovery
 def initialize_ai():
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -64,10 +64,69 @@ def initialize_ai():
         print("🔑 Configuring Gemini API...")
         genai.configure(api_key=api_key)
         
-        print("🤖 Initializing AI model...")
-        model = genai.GenerativeModel("gemini-pro")
+        # Discover available models dynamically
+        print("🔍 Discovering available Gemini models...")
+        try:
+            available_models = list(genai.list_models())
+            if not available_models:
+                print("❌ No models found in your account")
+                return None
+                
+            print("📋 Available models:")
+            for model in available_models[:5]:  # Show first 5 models
+                print("   - {}".format(model.name))
+            
+            # Preferred models in order of preference
+            preferred_models = [
+                "models/gemini-1.5-flash",
+                "models/gemini-1.5-pro", 
+                "models/gemini-pro",
+                "models/gemini-1.0-pro",
+            ]
+            
+            # Find the first available preferred model
+            selected_model_name = None
+            for pref_model in preferred_models:
+                for available_model in available_models:
+                    if available_model.name == pref_model:
+                        if 'generateContent' in available_model.supported_generation_methods:
+                            selected_model_name = pref_model
+                            break
+                if selected_model_name:
+                    break
+            
+            # If no preferred model found, use the first available model that supports generateContent
+            if not selected_model_name:
+                for available_model in available_models:
+                    if 'generateContent' in available_model.supported_generation_methods:
+                        selected_model_name = available_model.name
+                        break
+            
+            if not selected_model_name:
+                print("❌ No models support generateContent method")
+                return None
+                
+            print("🤖 Selected model: {}".format(selected_model_name))
+            model = genai.GenerativeModel(selected_model_name)
+            
+        except Exception as discovery_e:
+            print("⚠️ Model discovery failed, trying fallback: {}".format(str(discovery_e)))
+            # Fallback to hardcoded model names
+            fallback_models = ["gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"]
+            model = None
+            for fallback_name in fallback_models:
+                try:
+                    print("🔄 Trying fallback model: {}".format(fallback_name))
+                    model = genai.GenerativeModel(fallback_name)
+                    break
+                except:
+                    continue
+            
+            if not model:
+                print("❌ All fallback models failed")
+                return None
         
-        # Test the connection with a simple request
+        # Test the selected model
         try:
             print("🧪 Testing AI connection...")
             test_response = model.generate_content("Test", generation_config={"max_output_tokens": 10})
