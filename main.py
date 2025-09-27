@@ -65,7 +65,7 @@ def initialize_ai():
         genai.configure(api_key=api_key)
         
         print("🤖 Initializing AI model...")
-        model = genai.GenerativeModel("gemini-1.5-pro")
+        model = genai.GenerativeModel("gemini-pro")
         
         # Test the connection with a simple request
         try:

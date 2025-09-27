@@ -6,7 +6,7 @@
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Gemini](https://img.shields.io/badge/Google%20Gemini-1.5%20Pro-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
+[![Gemini](https://img.shields.io/badge/Google%20Gemini-Pro-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
 
 ---
 
@@ -86,21 +86,21 @@ Follow the detailed guide: **[📋 MANUAL_DEPLOYMENT.md](MANUAL_DEPLOYMENT.md)**
 
 ## 🎯 **Key Features**
 
-### **🧠 Smart AI Modes**
-Choose the perfect mode for your needs:
+### **🧠 Smart AI Assistant**
+Powered by Google Gemini Pro for intelligent conversations:
 
-- **💬 General** - Everyday questions and help
-- **💻 Developer** - Programming and tech help  
-- **🎨 Creative** - Writing and brainstorming
-- **🎓 Tutor** - Learning and explanations
-- **💼 Professional** - Business and career advice
+- **💬 Natural Conversations** - Chat naturally with advanced AI
+- **🎯 Context Awareness** - Remembers conversation history  
+- **🔐 Secure & Private** - Your data stays protected
+- **⚡ Fast Responses** - Optimized for quick interactions
+- **🌐 Always Available** - 24/7 AI assistance
 
 ### **📱 Beginner-Friendly Features**
 - **Simple Interface** - No confusing buttons or menus
 - **Quick Starters** - Click to try common tasks
-- **Smart Suggestions** - Get ideas for follow-up questions
 - **Conversation History** - Save and revisit your chats
-- **Export Chats** - Download your conversations as CSV
+- **Real-time Status** - See AI connection status
+- **Mobile Responsive** - Works perfectly on any device
 
 ### **🌙 Beautiful Dark Theme**
 - **Easy on the Eyes** - Perfect for extended use
@@ -116,8 +116,8 @@ Wave AI is ideal for AI workshops and training because:
 
 - **No Complex Setup** - Just install and run
 - **Clear Examples** - Easy to demonstrate
-- **Multiple Modes** - Show different AI personalities
-- **Conversation Export** - Students can save their work
+- **Professional UI** - Modern dark theme interface
+- **Interactive Chat** - Real-time AI conversations
 - **Developer Info** - Built-in "About" section
 
 ---
@@ -160,12 +160,12 @@ docker run -p 8000:8000 -e GEMINI_API_KEY=your-key wave-ai
 ### **For Beginners**
 - **Learn AI Basics** - Understand how AI assistants work
 - **Practice Conversations** - Get comfortable with AI interaction
-- **Explore Different Modes** - See AI adapt to different roles
+- **Explore AI Capabilities** - Test different types of questions
 
 ### **For Workshops**
 - **Demonstrate AI** - Show how modern AI works
 - **Interactive Learning** - Let students try different prompts
-- **Export Results** - Students can save and review conversations
+- **Real-time Results** - See AI responses instantly
 
 ### **For Everyday Use**
 - **Get Quick Answers** - Ask anything you want to know
@@ -279,7 +279,7 @@ MIT License - Use freely, modify as needed, share with others!
 ## 🙏 **Acknowledgments**
 
 - **Google Gemini** - Powerful AI capabilities
-- **Streamlit** - Amazing Python web framework
+- **FastAPI** - High-performance web framework
 - **Python Community** - Continuous inspiration
 - **Workshop Participants** - Feedback and ideas
 
@@ -289,14 +289,14 @@ MIT License - Use freely, modify as needed, share with others!
 
 Wave AI is continuously improving based on user feedback:
 
-- **More AI Modes** - Additional specialized assistants
-- **Better Export** - More file formats
+- **Enhanced AI Features** - More intelligent responses
+- **Better Performance** - Faster load times and responses
 - **Enhanced UI** - Even more beginner-friendly
 - **Workshop Tools** - Special features for training
 
 ---
 
-**© 2024 Wave AI • Built with ❤️ by Ayush Shukla • Powered by Google Gemini AI**
+**© 2024 Wave AI • Built with ❤️ by Ayush Shukla • Powered by Google Gemini Pro**
 
 *Simple • Intelligent • Reliable • Perfect for Beginners*
 
